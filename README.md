@@ -155,4 +155,5 @@ After the `find_package(FairMQ)` call the following CMake variables are defined:
    3. [Color for console output](docs/Logging.md#53-color)
    4. [File output](docs/Logging.md#54-file-output)
    5. [Custom sinks](docs/Logging.md#55-custom-sinks)
-6. [Examples](docs/Examples.md#6-examples)
+6. [Plugins](docs/Plugins.md#6-plugins)
+7. [Examples](docs/Examples.md#7-examples)
