@@ -13,10 +13,10 @@
 #include <FairMQMessage.h>
 #include <fairmq/ofi/Context.h>
 
+#include <asiofi/connected_endpoint.hpp>
 #include <boost/asio.hpp>
 #include <memory> // unique_ptr
 #include <netinet/in.h>
-#include <rdma/fabric.h>
 
 namespace fair
 {
@@ -83,9 +83,7 @@ class Socket final : public fair::mq::Socket
   private:
     void* fControlSocket;
     void* fMonitorSocket;
-    fid_ep* fDataEndpoint;
-    fid_cq* fDataCompletionQueueTx;
-    fid_cq* fDataCompletionQueueRx;
+    std::unique_ptr<asiofi::connected_endpoint> fDataEndpoint;
     std::string fId;
     std::atomic<unsigned long> fBytesTx;
     std::atomic<unsigned long> fBytesRx;
