@@ -13,8 +13,6 @@
 #include <options/FairMQProgOptions.h>
 #include <fairmq/ofi/Context.h>
 
-#include <asiofi.hpp>
-
 namespace fair
 {
 namespace mq
@@ -56,7 +54,6 @@ class TransportFactory final : public FairMQTransportFactory
 
   private:
     mutable Context fContext;
-    asiofi::allocated_pool_resource fMemoryResource;
 }; /* class TransportFactory */  
 
 } /* namespace ofi */

@@ -37,6 +37,10 @@ Context::Context(FairMQTransportFactory& sendFactory,
     : fIoWork(fIoContext)
     , fReceiveFactory(receiveFactory)
     , fSendFactory(sendFactory)
+    , fOfiFabric(nullptr)
+    , fOfiDomain(nullptr)
+    , fRegisteredMemoryResource(nullptr)
+    , fMessageMemoryPool(nullptr)
 {
     InitThreadPool(numberIoThreads);
 }
@@ -118,6 +122,24 @@ auto Context::MakeReceiveMessage(size_t size) -> MessagePtr
 auto Context::MakeSendMessage(size_t size) -> MessagePtr
 {
     return fSendFactory.CreateMessage(size);
+}
+
+auto Context::GetOfiFabric() -> asiofi::fabric&
+{
+    if (fOfiFabric) {
+        return *fOfiFabric;
+    } else {
+        throw ContextError("ofi fabric not yet created");
+    }
+}
+
+auto Context::GetOfiDomain() -> asiofi::domain&
+{
+    if (fOfiDomain) {
+        return *fOfiDomain;
+    } else {
+        throw ContextError("ofi domain not yet created");
+    }
 }
 
 } /* namespace ofi */

@@ -35,12 +35,12 @@ try : FairMQTransportFactory(id)
 
 auto TransportFactory::CreateMessage() -> MessagePtr
 {
-    return MessagePtr{new Message(&fMemoryResource)};
+    return MessagePtr{new Message(fContext.GetMessagePmr())};
 }
 
 auto TransportFactory::CreateMessage(const size_t size) -> MessagePtr
 {
-    return MessagePtr{new Message(&fMemoryResource, size)};
+    return MessagePtr{new Message(fContext.GetMessagePmr(), size)};
 }
 
 auto TransportFactory::CreateMessage(void* data,
@@ -48,7 +48,7 @@ auto TransportFactory::CreateMessage(void* data,
                                      fairmq_free_fn* ffn,
                                      void* hint) -> MessagePtr
 {
-    return MessagePtr{new Message(&fMemoryResource, data, size, ffn, hint)};
+    return MessagePtr{new Message(fContext.GetMessagePmr(), data, size, ffn, hint)};
 }
 
 auto TransportFactory::CreateMessage(UnmanagedRegionPtr& region,
@@ -56,7 +56,7 @@ auto TransportFactory::CreateMessage(UnmanagedRegionPtr& region,
                                      const size_t size,
                                      void* hint) -> MessagePtr
 {
-    return MessagePtr{new Message(&fMemoryResource, region, data, size, hint)};
+    return MessagePtr{new Message(fContext.GetMessagePmr(), region, data, size, hint)};
 }
 
 auto TransportFactory::CreateSocket(const string& type, const string& name) const -> SocketPtr
