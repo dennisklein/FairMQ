@@ -44,8 +44,8 @@ option(BUILD_DOCS "Build FairMQ documentation." OFF)
 option(FAST_BUILD "Fast production build. Not recommended for development." OFF)
 ################################################################################
 
-add_compile_definitions(BOOST_SYSTEM_NO_DEPRECATED)
-add_compile_definitions(BOOST_ERROR_CODE_HEADER_ONLY)
+add_definitions(-DBOOST_SYSTEM_NO_DEPRECATED)
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
 # Dependencies #################################################################
 if(FAST_BUILD)
