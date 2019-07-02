@@ -34,6 +34,7 @@ target_compile_definitions(${target} PUBLIC BOOST_ERROR_CODE_HEADER_ONLY)
 target_include_directories(${target}
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
   $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(${target}
