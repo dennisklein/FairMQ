@@ -444,7 +444,7 @@ class FairMQDevice
 
   protected:
     std::shared_ptr<FairMQTransportFactory> fTransportFactory; ///< Default transport factory
-    std::unordered_map<fair::mq::Transport, std::shared_ptr<FairMQTransportFactory>> fTransports; ///< Container for transports
+    std::unordered_map<fair::mq::Transport, std::shared_ptr<FairMQTransportFactory>, fair::mq::tools::HashEnum<fair::mq::Transport>> fTransports; ///< Container for transports
 
   public:
     std::unordered_map<std::string, std::vector<FairMQChannel>> fChannels; ///< Device channels
@@ -577,7 +577,7 @@ class FairMQDevice
     bool fDataCallbacks;
     std::unordered_map<std::string, InputMsgCallback> fMsgInputs;
     std::unordered_map<std::string, InputMultipartCallback> fMultipartInputs;
-    std::unordered_map<fair::mq::Transport, std::vector<std::string>> fMultitransportInputs;
+    std::unordered_map<fair::mq::Transport, std::vector<std::string>, fair::mq::tools::HashEnum<fair::mq::Transport>> fMultitransportInputs;
     std::unordered_map<std::string, std::pair<uint16_t, uint16_t>> fChannelRegistry;
     std::vector<std::string> fInputChannelKeys;
     std::mutex fMultitransportMutex;

@@ -29,22 +29,6 @@ enum class Transport
     OFI
 };
 
-} /* namespace mq */
-} /* namespace fair */
-
-namespace std
-{
-
-template<>
-struct hash<fair::mq::Transport> : fair::mq::tools::HashEnum<fair::mq::Transport> {};
-
-} /* namespace std */
-
-namespace fair
-{
-namespace mq
-{
-
 static std::unordered_map<std::string, Transport> TransportTypes {
     { "default", Transport::DEFAULT },
     { "zeromq", Transport::ZMQ },
@@ -53,7 +37,7 @@ static std::unordered_map<std::string, Transport> TransportTypes {
     { "ofi", Transport::OFI }
 };
 
-static std::unordered_map<Transport, std::string> TransportNames {
+static std::unordered_map<Transport, std::string, tools::HashEnum<Transport>> TransportNames {
     { Transport::DEFAULT, "default" },
     { Transport::ZMQ, "zeromq" },
     { Transport::NN, "nanomsg" },
