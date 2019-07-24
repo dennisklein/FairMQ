@@ -196,6 +196,8 @@ auto DDSSession::RequestAgentInfo() -> AgentInfo
     fImpl->fSession.sendRequest<dds::tools_api::SAgentInfoRequest>(agentInfoRequest);
     blocker.Wait();
 
+    LOG(info) << "agentInfo: active=" << info.activeAgentsCount << ", idle=" << info.idleAgentsCount << ", executing=" << info.executingAgentsCount;
+
     return info;
 }
 
