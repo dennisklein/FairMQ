@@ -38,29 +38,33 @@ int main(int argc, char *argv[]) {
 
   fair::mq::sdk::Topology fairmqTopo(ddsTopo, ddsSession);
 
-  using fair::mq::sdk::TopologyTransition;
-  for (auto transition :
-       {TopologyTransition::InitDevice, TopologyTransition::CompleteInit,
-        TopologyTransition::Bind, TopologyTransition::Connect,
-        TopologyTransition::InitTask, TopologyTransition::Run,
-        TopologyTransition::Stop, TopologyTransition::ResetTask,
-        TopologyTransition::ResetDevice, TopologyTransition::End}) {
-    auto [ec, states] =
-        fairmqTopo.ChangeState(transition, std::chrono::milliseconds(300));
-    if (!ec) {
-      LOG(info) << states.size() << " devices transitioned to "
-                << fair::mq::sdk::AggregateState(states);
-    } else {
-      LOG(error) << ec;
-      return ec.value();
-    }
-  }
-
   LOG(info) << "DDS commander logs in " << ddsEnv.GetConfigHome() / ".DDS/log/sessions" / ddsSession.GetId();
   LOG(info) << "DDS agent logs in ";
   for (const auto& ddsAgent : ddsAgents) {
     LOG(info) << "  " << ddsAgent.GetDDSPath();
   }
+
+  (void)std::cin.get();
+
+  using fair::mq::sdk::TopologyTransition;
+  do {
+    for (auto transition :
+         {TopologyTransition::InitDevice, TopologyTransition::CompleteInit,
+          TopologyTransition::Bind, TopologyTransition::Connect,
+          TopologyTransition::InitTask, TopologyTransition::Run,
+          TopologyTransition::Stop, TopologyTransition::ResetTask,
+          TopologyTransition::ResetDevice}) {
+      auto [ec, states] =
+          fairmqTopo.ChangeState(transition, std::chrono::milliseconds(300));
+      if (!ec) {
+        LOG(info) << states.size() << " devices transitioned to "
+                  << fair::mq::sdk::AggregateState(states);
+      } else {
+        LOG(error) << ec;
+        return ec.value();
+      }
+    }
+  } while (std::cin.get() != 'q');
 
   return 0;
 }
