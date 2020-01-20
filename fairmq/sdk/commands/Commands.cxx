@@ -177,7 +177,7 @@ array<FBCmd, 20> typeToFBCmd =
     }
 };
 
-array<Type, 21> fbCmdToType =
+array<Type, 20> fbCmdToType =
 {
     {
         Type::check_state,
@@ -189,8 +189,7 @@ array<Type, 21> fbCmdToType =
         Type::unsubscribe_from_state_change,
         Type::state_change_exiting_received,
         Type::get_property,
-        Type::set_property_str,
-        Type::set_property_int,
+        Type::set_property,
         Type::current_state,
         Type::transition_status,
         Type::config,
@@ -260,69 +259,60 @@ string Cmds::Serialize(const Format type) const
             }
             break;
             case Type::get_property: {
-                auto key = fbb.CreateString(dynamic_cast<GetProperty&>(*cmd).GetKey());
-                FBPropertyBuilder propertyBuilder(fbb);
-                propertyBuilder.add_key(key);
+                auto key = fbb.CreateString(static_cast<GetProperty&>(*cmd).GetKey());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
-                cmdBuilder->add_property(propertyBuilder.Finish());
+                cmdBuilder->add_property_key(key);
             }
             break;
-            case Type::set_property_str: {
-                auto _cmd(dynamic_cast<SetProperty<string>&>(*cmd));
-                auto key(fbb.CreateString(_cmd.GetKey()));
-                auto value(fbb.CreateString(_cmd.GetValue()));
-                FBPropertyBuilder propertyBuilder(fbb);
-                propertyBuilder.add_key(key);
-                propertyBuilder.add_str_value(value);
+            case Type::set_property: {
+                auto _cmd = static_cast<SetProperty&>(*cmd);
+                auto key = fbb.CreateString(_cmd.GetKey());
+                auto value = fbb.CreateString(_cmd.GetValue());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
-                cmdBuilder->add_property(propertyBuilder.Finish());
-            }
-            break;
-            case Type::set_property_int: {
-                auto _cmd(dynamic_cast<SetProperty<int>&>(*cmd));
-                auto key(fbb.CreateString(_cmd.GetKey()));
-                FBPropertyBuilder propertyBuilder(fbb);
-                propertyBuilder.add_key(key);
-                propertyBuilder.add_int_value(_cmd.GetValue());
-                cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
-                cmdBuilder->add_property(propertyBuilder.Finish());
+                cmdBuilder->add_property_key(key);
+                cmdBuilder->add_property_value(value);
             }
             break;
             case Type::current_state: {
-                auto deviceId = fbb.CreateString(static_cast<CurrentState&>(*cmd).GetDeviceId());
+                auto _cmd = static_cast<CurrentState&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_current_state(GetFBState(static_cast<CurrentState&>(*cmd).GetCurrentState()));
+                cmdBuilder->add_current_state(GetFBState(_cmd.GetCurrentState()));
             }
             break;
             case Type::transition_status: {
-                auto deviceId = fbb.CreateString(static_cast<TransitionStatus&>(*cmd).GetDeviceId());
+                auto _cmd = static_cast<TransitionStatus&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_result(GetFBResult(static_cast<TransitionStatus&>(*cmd).GetResult()));
-                cmdBuilder->add_transition(GetFBTransition(static_cast<TransitionStatus&>(*cmd).GetTransition()));
+                cmdBuilder->add_result(GetFBResult(_cmd.GetResult()));
+                cmdBuilder->add_transition(GetFBTransition(_cmd.GetTransition()));
             }
             break;
             case Type::config: {
-                auto deviceId = fbb.CreateString(static_cast<Config&>(*cmd).GetDeviceId());
-                auto config = fbb.CreateString(static_cast<Config&>(*cmd).GetConfig());
+                auto _cmd = static_cast<Config&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
+                auto config = fbb.CreateString(_cmd.GetConfig());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
                 cmdBuilder->add_config_string(config);
             }
             break;
             case Type::heartbeat_subscription: {
-                auto deviceId = fbb.CreateString(static_cast<HeartbeatSubscription&>(*cmd).GetDeviceId());
+                auto _cmd = static_cast<HeartbeatSubscription&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_result(GetFBResult(static_cast<HeartbeatSubscription&>(*cmd).GetResult()));
+                cmdBuilder->add_result(GetFBResult(_cmd.GetResult()));
             }
             break;
             case Type::heartbeat_unsubscription: {
-                auto deviceId = fbb.CreateString(static_cast<HeartbeatUnsubscription&>(*cmd).GetDeviceId());
+                auto _cmd = static_cast<HeartbeatUnsubscription&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_result(GetFBResult(static_cast<HeartbeatUnsubscription&>(*cmd).GetResult()));
+                cmdBuilder->add_result(GetFBResult(_cmd.GetResult()));
             }
             break;
             case Type::heartbeat: {
@@ -332,53 +322,41 @@ string Cmds::Serialize(const Format type) const
             }
             break;
             case Type::state_change_subscription: {
-                auto deviceId = fbb.CreateString(static_cast<StateChangeSubscription&>(*cmd).GetDeviceId());
+                auto _cmd = static_cast<StateChangeSubscription&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_result(GetFBResult(static_cast<StateChangeSubscription&>(*cmd).GetResult()));
+                cmdBuilder->add_result(GetFBResult(_cmd.GetResult()));
             }
             break;
             case Type::state_change_unsubscription: {
-                auto deviceId = fbb.CreateString(static_cast<StateChangeUnsubscription&>(*cmd).GetDeviceId());
+                auto _cmd = static_cast<StateChangeUnsubscription&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_result(GetFBResult(static_cast<StateChangeUnsubscription&>(*cmd).GetResult()));
+                cmdBuilder->add_result(GetFBResult(_cmd.GetResult()));
             }
             break;
             case Type::state_change: {
-                auto deviceId = fbb.CreateString(static_cast<StateChange&>(*cmd).GetDeviceId());
+                auto _cmd = static_cast<StateChange&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_task_id(static_cast<StateChange&>(*cmd).GetTaskId());
-                cmdBuilder->add_last_state(GetFBState(static_cast<StateChange&>(*cmd).GetLastState()));
-                cmdBuilder->add_current_state(GetFBState(static_cast<StateChange&>(*cmd).GetCurrentState()));
+                cmdBuilder->add_task_id(_cmd.GetTaskId());
+                cmdBuilder->add_last_state(GetFBState(_cmd.GetLastState()));
+                cmdBuilder->add_current_state(GetFBState(_cmd.GetCurrentState()));
             }
             break;
-            case Type::property_str: {
-                auto _cmd(dynamic_cast<Property<string>&>(*cmd));
-                auto deviceId = fbb.CreateString(static_cast<StateChangeUnsubscription&>(*cmd).GetDeviceId());
-                auto key(fbb.CreateString(_cmd.GetKey()));
-                auto value(fbb.CreateString(_cmd.GetValue()));
-                FBPropertyBuilder propertyBuilder(fbb);
-                propertyBuilder.add_key(key);
-                propertyBuilder.add_str_value(value);
+            case Type::property: {
+                auto _cmd = static_cast<Property&>(*cmd);
+                auto deviceId = fbb.CreateString(_cmd.GetDeviceId());
+                auto key = fbb.CreateString(_cmd.GetKey());
+                auto value = fbb.CreateString(_cmd.GetValue());
                 cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
                 cmdBuilder->add_device_id(deviceId);
                 cmdBuilder->add_result(GetFBResult(_cmd.GetResult()));
-                cmdBuilder->add_property(propertyBuilder.Finish());
-            }
-            break;
-            case Type::property_int: {
-                auto _cmd(dynamic_cast<Property<int>&>(*cmd));
-                auto deviceId = fbb.CreateString(static_cast<StateChangeUnsubscription&>(*cmd).GetDeviceId());
-                auto key(fbb.CreateString(_cmd.GetKey()));
-                FBPropertyBuilder propertyBuilder(fbb);
-                propertyBuilder.add_key(key);
-                propertyBuilder.add_int_value(_cmd.GetValue());
-                cmdBuilder = tools::make_unique<FBCommandBuilder>(fbb);
-                cmdBuilder->add_device_id(deviceId);
-                cmdBuilder->add_result(GetFBResult(_cmd.GetResult()));
-                cmdBuilder->add_property(propertyBuilder.Finish());
+                cmdBuilder->add_property_key(key);
+                cmdBuilder->add_property_value(value);
             }
             break;
             default:
@@ -458,23 +436,11 @@ void Cmds::Deserialize(const string& str, const Format type)
                 fCmds.emplace_back(make<StateChangeExitingReceived>());
             break;
             case FBCmd_get_property:
-                fCmds.emplace_back(make<GetProperty>(cmdPtr.property()->key()->str()));
+                fCmds.emplace_back(make<GetProperty>(cmdPtr.property_key()->str()));
             break;
-                // case FBCmd_get_property: {
-                // auto prop(cmdPtr.property());
-                // switch (prop->type()) {
-                // case FBPropertyType_string:
-                // fCmds.emplace_back(
-                // make<GetProperty>(prop->key()->str(), prop->str_value()->str()));
-                // break;
-                // case FBPropertyType_integer:
-                // fCmds.emplace_back(
-                // make<GetProperty>(prop->key()->str(), prop->int_value()));
-                // break;
-                // default:
-                // }
-                // break;
-            // }
+            case FBCmd_set_property:
+                fCmds.emplace_back(make<SetProperty>(cmdPtr.property_key()->str(), cmdPtr.property_value()->str()));
+            break;
             case FBCmd_current_state:
                 fCmds.emplace_back(make<CurrentState>(cmdPtr.device_id()->str(), GetMQState(cmdPtr.current_state())));
             break;
@@ -501,6 +467,9 @@ void Cmds::Deserialize(const string& str, const Format type)
             break;
             case FBCmd_state_change:
                 fCmds.emplace_back(make<StateChange>(cmdPtr.device_id()->str(), cmdPtr.task_id(), GetMQState(cmdPtr.last_state()), GetMQState(cmdPtr.current_state())));
+            break;
+            case FBCmd_property:
+                fCmds.emplace_back(make<Property>(cmdPtr.device_id()->str(), GetResult(cmdPtr.result()), cmdPtr.property_key()->str(), cmdPtr.property_value()->str()));
             break;
             default:
                 throw CommandFormatError("unrecognized command type given to fair::mq::cmd::Cmds::Deserialize()");

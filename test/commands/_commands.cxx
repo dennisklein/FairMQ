@@ -91,6 +91,7 @@ void fillCommands(Cmds& cmds)
     cmds.Add<UnsubscribeFromStateChange>();
     cmds.Add<StateChangeExitingReceived>();
     cmds.Add<GetProperty>("mykey");
+    cmds.Add<SetProperty>("mykey", "myvalue");
     cmds.Add<CurrentState>("somedeviceid", State::Running);
     cmds.Add<TransitionStatus>("somedeviceid", Result::Ok, Transition::Stop);
     cmds.Add<Config>("somedeviceid", "someconfig");
@@ -100,11 +101,12 @@ void fillCommands(Cmds& cmds)
     cmds.Add<StateChangeSubscription>("somedeviceid", Result::Ok);
     cmds.Add<StateChangeUnsubscription>("somedeviceid", Result::Ok);
     cmds.Add<StateChange>("somedeviceid", 123456, State::Running, State::Ready);
+    cmds.Add<Property>("somedeviceid", Result::Ok, "mykey", "myvalue");
 }
 
 void checkCommands(Cmds& cmds)
 {
-    ASSERT_EQ(cmds.Size(), 18);
+    ASSERT_EQ(cmds.Size(), 20);
 
     int count = 0;
 
@@ -138,6 +140,11 @@ void checkCommands(Cmds& cmds)
             case Type::get_property:
                 ++count;
                 ASSERT_EQ(static_cast<GetProperty&>(*cmd).GetKey(), "mykey");
+            break;
+            case Type::set_property:
+                ++count;
+                ASSERT_EQ(static_cast<SetProperty&>(*cmd).GetKey(), "mykey");
+                ASSERT_EQ(static_cast<SetProperty&>(*cmd).GetValue(), "myvalue");
             break;
             case Type::current_state:
                 ++count;
@@ -186,13 +193,20 @@ void checkCommands(Cmds& cmds)
                 ASSERT_EQ(static_cast<StateChange&>(*cmd).GetLastState(), State::Running);
                 ASSERT_EQ(static_cast<StateChange&>(*cmd).GetCurrentState(), State::Ready);
             break;
+            case Type::property:
+                ++count;
+                ASSERT_EQ(static_cast<Property&>(*cmd).GetDeviceId(), "somedeviceid");
+                ASSERT_EQ(static_cast<Property&>(*cmd).GetResult(), Result::Ok);
+                ASSERT_EQ(static_cast<Property&>(*cmd).GetKey(), "mykey");
+                ASSERT_EQ(static_cast<Property&>(*cmd).GetValue(), "myvalue");
+            break;
             default:
                 ASSERT_TRUE(false);
             break;
         }
     }
 
-    ASSERT_EQ(count, 18);
+    ASSERT_EQ(count, 20);
 }
 
 TEST(Format, SerializationBinary)

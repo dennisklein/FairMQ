@@ -38,18 +38,6 @@ enum FBTransition:byte {
     ErrorFound
 }
 
-enum FBPropertyType:byte {
-    string,
-    integer
-}
-
-table FBProperty {
-    key:string;
-    type:FBPropertyType;
-    str_value:string;
-    int_value:uint64;
-}
-
 enum FBCmd:byte {
     check_state,                   // args: { }
     change_state,                  // args: { transition }
@@ -60,7 +48,7 @@ enum FBCmd:byte {
     unsubscribe_from_state_change, // args: { }
     state_change_exiting_received, // args: { }
     get_property,                  // args: { key }
-    set_property,                  // args: { Property }
+    set_property,                  // args: { key, value }
 
     current_state,                 // args: { device_id, current_state }
     transition_status,             // args: { device_id, Result, transition }
@@ -71,7 +59,7 @@ enum FBCmd:byte {
     state_change_subscription,     // args: { device_id, Result }
     state_change_unsubscription,   // args: { device_id, Result }
     state_change,                  // args: { device_id, task_id, last_state, current_state }
-    property,                      // args: { device_id, Result, Property }
+    property                       // args: { device_id, Result, key, value }
 }
 
 table FBCommand {
@@ -85,7 +73,8 @@ table FBCommand {
     last_state:FBState;
     current_state:FBState;
     debug:string;
-    property:FBProperty;
+    property_key:string;
+    property_value:string;
 }
 
 table FBCommands {
