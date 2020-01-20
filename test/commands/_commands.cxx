@@ -27,6 +27,7 @@ TEST(Format, Construction)
     Cmds subscribeToStateChangeCmds(make<SubscribeToStateChange>());
     Cmds unsubscribeFromStateChangeCmds(make<UnsubscribeFromStateChange>());
     Cmds stateChangeExitingReceivedCmds(make<StateChangeExitingReceived>());
+    Cmds getPropertyCmds(make<GetProperty>("mykey"));
     Cmds currentStateCmds(make<CurrentState>("somedeviceid", State::Running));
     Cmds transitionStatusCmds(make<TransitionStatus>("somedeviceid", Result::Ok, Transition::Stop));
     Cmds configCmds(make<Config>("somedeviceid", "someconfig"));
@@ -46,6 +47,8 @@ TEST(Format, Construction)
     ASSERT_EQ(subscribeToStateChangeCmds.At(0).GetType(), Type::subscribe_to_state_change);
     ASSERT_EQ(unsubscribeFromStateChangeCmds.At(0).GetType(), Type::unsubscribe_from_state_change);
     ASSERT_EQ(stateChangeExitingReceivedCmds.At(0).GetType(), Type::state_change_exiting_received);
+    ASSERT_EQ(getPropertyCmds.At(0).GetType(), Type::get_property);
+    ASSERT_EQ(static_cast<GetProperty&>(getPropertyCmds.At(0)).GetKey(), "mykey");
     ASSERT_EQ(currentStateCmds.At(0).GetType(), Type::current_state);
     ASSERT_EQ(static_cast<CurrentState&>(currentStateCmds.At(0)).GetDeviceId(), "somedeviceid");
     ASSERT_EQ(static_cast<CurrentState&>(currentStateCmds.At(0)).GetCurrentState(), State::Running);
@@ -87,6 +90,7 @@ void fillCommands(Cmds& cmds)
     cmds.Add<SubscribeToStateChange>();
     cmds.Add<UnsubscribeFromStateChange>();
     cmds.Add<StateChangeExitingReceived>();
+    cmds.Add<GetProperty>("mykey");
     cmds.Add<CurrentState>("somedeviceid", State::Running);
     cmds.Add<TransitionStatus>("somedeviceid", Result::Ok, Transition::Stop);
     cmds.Add<Config>("somedeviceid", "someconfig");
@@ -100,7 +104,7 @@ void fillCommands(Cmds& cmds)
 
 void checkCommands(Cmds& cmds)
 {
-    ASSERT_EQ(cmds.Size(), 17);
+    ASSERT_EQ(cmds.Size(), 18);
 
     int count = 0;
 
@@ -130,6 +134,10 @@ void checkCommands(Cmds& cmds)
             break;
             case Type::state_change_exiting_received:
                 ++count;
+            break;
+            case Type::get_property:
+                ++count;
+                ASSERT_EQ(static_cast<GetProperty&>(*cmd).GetKey(), "mykey");
             break;
             case Type::current_state:
                 ++count;
@@ -184,7 +192,7 @@ void checkCommands(Cmds& cmds)
         }
     }
 
-    ASSERT_EQ(count, 17);
+    ASSERT_EQ(count, 18);
 }
 
 TEST(Format, SerializationBinary)

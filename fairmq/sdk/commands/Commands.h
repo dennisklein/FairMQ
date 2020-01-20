@@ -47,6 +47,9 @@ enum class Type : int
     subscribe_to_state_change,     // args: { }
     unsubscribe_from_state_change, // args: { }
     state_change_exiting_received, // args: { }
+    get_property,                  // args: { Property }
+    set_property_str,              // args: { Property }
+    set_property_int,              // args: { Property }
 
     current_state,                 // args: { device_id, current_state }
     transition_status,             // args: { device_id, Result, transition }
@@ -56,12 +59,15 @@ enum class Type : int
     heartbeat,                     // args: { device_id }
     state_change_subscription,     // args: { device_id, Result }
     state_change_unsubscription,   // args: { device_id, Result }
-    state_change                   // args: { device_id, task_id, last_state, current_state }
+    state_change,                  // args: { device_id, task_id, last_state, current_state }
+    property_str,                  // args: { device_id, Result, Property }
+    property_int,                  // args: { device_id, Result, Property }
 };
 
 struct Cmd
 {
     explicit Cmd(const Type type) : fType(type) {}
+    virtual ~Cmd() = default;
 
     Type GetType() const { return fType; }
 
@@ -116,6 +122,44 @@ struct UnsubscribeFromStateChange : Cmd
 struct StateChangeExitingReceived : Cmd
 {
     explicit StateChangeExitingReceived() : Cmd(Type::state_change_exiting_received) {}
+};
+
+struct GetProperty : Cmd
+{
+    explicit GetProperty(std::string key)
+        : Cmd(Type::get_property)
+        , fKey(std::move(key))
+    {}
+
+    auto GetKey() const -> std::string { return fKey; }
+    auto SetKey(const std::string& key) -> void { fKey = key; }
+
+  private:
+    std::string fKey;
+};
+
+template <typename T>
+struct SetProperty : Cmd
+{
+    explicit SetProperty(std::string key)
+        : Cmd(Type::set_property)
+        , fKey(std::move(key))
+    {}
+    SetProperty(std::string key, T value)
+        : Cmd(Type::set_property)
+        , fKey(std::move(key))
+        , fValue(std::move(value))
+    {}
+
+    auto GetKey() -> std::string { return fKey; }
+    auto SetKey(const std::string& key) -> void { fKey = key; }
+    auto GetValue() -> T { return fValue; }
+    auto SetValue(const T& value) -> void { fValue = value; }
+
+    using Type = T;
+  private:
+    std::string fKey;
+    T fValue;
 };
 
 struct CurrentState : Cmd
@@ -286,6 +330,27 @@ struct StateChange : Cmd
     uint64_t fTaskId;
     fair::mq::State fLastState;
     fair::mq::State fCurrentState;
+};
+
+template <typename T>
+struct Property : Cmd {
+    explicit Property(std::string key)
+        : Cmd(Type::property)
+        , fKey(std::move(key))
+    {}
+    Property(std::string key, T value)
+        : Cmd(Type::property)
+        , fKey(std::move(key))
+        , fValue(std::move(value))
+    {}
+
+    auto GetKey() -> std::string { return fKey; }
+    auto GetValue() -> T { return fValue; }
+
+    using Type = T;
+  private:
+    std::string fKey;
+    T fValue;
 };
 
 template<typename C, typename... Args>
