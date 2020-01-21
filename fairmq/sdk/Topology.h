@@ -76,6 +76,11 @@ using TopologyStateByTask = std::unordered_map<DDSTask::Id, DeviceStatus>;
 using TopologyStateByCollection = std::unordered_map<DDSCollection::Id, std::vector<DeviceStatus>>;
 using TopologyTransition = fair::mq::Transition;
 
+using Property = std::pair<std::string, std::string>;
+using Properties = std::vector<Property>;
+
+using TopologyProperties = std::vector<Properties>;
+
 inline DeviceState AggregateState(const TopologyState& topologyState)
 {
     DeviceState first = topologyState.begin()->state;
@@ -154,6 +159,8 @@ class BasicTopology : public AsioBase<Executor, Allocator>
         , fChangeStateOp()
         , fChangeStateOpTimer(ex)
         , fChangeStateTarget(DeviceState::Idle)
+        , fSetPropertiesOp()
+        , fSetPropertiesOpTimer(ex)
     {
         makeTopologyState();
 
@@ -168,18 +175,22 @@ class BasicTopology : public AsioBase<Executor, Allocator>
             Cmds inCmds;
             inCmds.Deserialize(msg);
             // LOG(debug) << "Received " << inCmds.Size() << " command(s) with total size of " << msg.length() << " bytes: ";
+
+            Properties properties; // TODO: refactor this... handle properties case within its case.
+
             for (const auto& cmd : inCmds) {
                 // LOG(debug) << " > " << cmd->GetType();
                 switch (cmd->GetType()) {
                     case Type::state_change: {
-                        DDSTask::Id taskId(static_cast<StateChange&>(*cmd).GetTaskId());
+                        auto _cmd = static_cast<StateChange&>(*cmd);
+                        DDSTask::Id taskId(_cmd.GetTaskId());
                         fDDSSession.UpdateChannelToTaskAssociation(senderId, taskId);
-                        if (static_cast<StateChange&>(*cmd).GetCurrentState() == DeviceState::Exiting) {
+                        if (_cmd.GetCurrentState() == DeviceState::Exiting) {
                             Cmds outCmds;
                             outCmds.Add<StateChangeExitingReceived>();
                             fDDSSession.SendCommand(outCmds.Serialize(), senderId);
                         }
-                        UpdateStateEntry(taskId, static_cast<StateChange&>(*cmd).GetCurrentState());
+                        UpdateStateEntry(taskId, _cmd.GetCurrentState());
                     }
                     break;
                     case Type::state_change_subscription:
@@ -203,11 +214,28 @@ class BasicTopology : public AsioBase<Executor, Allocator>
                         }
                     }
                     break;
+                    case Type::property: {
+                        auto _cmd = static_cast<cmd::Property&>(*cmd);
+                        if (_cmd.GetResult() != Result::Ok) {
+                            LOG(error) << "Property update failed for " << _cmd.GetDeviceId();
+                            std::lock_guard<std::mutex> lk(fMtx);
+                            if (!fSetPropertiesOp.IsCompleted()) {
+                                fSetPropertiesOpTimer.cancel();
+                                fSetPropertiesOp.Complete(MakeErrorCode(ErrorCode::DeviceSetPropertyFailed), fUpdatedProperties);
+                            }
+                        } else {
+                            properties.emplace_back(_cmd.GetKey(), _cmd.GetValue());
+                        }
+                    }
+                    break;
                     default:
                         LOG(warn) << "Unexpected/unknown command received: " << cmd->GetType();
                         LOG(warn) << "Origin: " << senderId;
                     break;
                 }
+            }
+            if (properties.size() > 0) {
+                UpdateProperties(std::move(properties));
             }
         });
 
@@ -320,55 +348,53 @@ class BasicTopology : public AsioBase<Executor, Allocator>
     /// }
     /// @endcode
     template<typename CompletionToken>
-    auto AsyncChangeState(TopologyTransition transition,
+    auto AsyncChangeState(const TopologyTransition transition,
                           Duration timeout,
                           CompletionToken&& token)
     {
-        return asio::async_initiate<CompletionToken, ChangeStateCompletionSignature>(
-            [&](auto handler) {
-                std::lock_guard<std::mutex> lk(fMtx);
+        return asio::async_initiate<CompletionToken, ChangeStateCompletionSignature>([&](auto handler) {
+            std::lock_guard<std::mutex> lk(fMtx);
 
-                if (fChangeStateOp.IsCompleted()) {
-                    fChangeStateOp = ChangeStateOp(AsioBase<Executor, Allocator>::GetExecutor(),
-                                                   AsioBase<Executor, Allocator>::GetAllocator(),
-                                                   std::move(handler));
-                    fChangeStateTarget = expectedState.at(transition);
-                    ResetTransitionedCount(fChangeStateTarget);
-                    cmd::Cmds cmds(cmd::make<cmd::ChangeState>(transition));
-                    fDDSSession.SendCommand(cmds.Serialize());
-                    if (timeout > std::chrono::milliseconds(0)) {
-                        fChangeStateOpTimer.expires_after(timeout);
-                        fChangeStateOpTimer.async_wait([&](std::error_code ec) {
-                            if (!ec) {
-                                std::lock_guard<std::mutex> lk2(fMtx);
-                                fChangeStateOp.Timeout(fStateData);
-                            }
-                        });
-                    }
-                } else {
-                    // TODO refactor to hide boiler plate
-                    auto ex2(asio::get_associated_executor(handler, AsioBase<Executor, Allocator>::GetExecutor()));
-                    auto alloc2(asio::get_associated_allocator(handler, AsioBase<Executor, Allocator>::GetAllocator()));
-                    auto state(GetCurrentStateUnsafe());
-
-                    ex2.post(
-                        [h = std::move(handler), s = std::move(state)]() mutable {
-                            try {
-                                h(MakeErrorCode(ErrorCode::OperationInProgress), s);
-                            } catch (const std::exception& e) {
-                                LOG(error) << "Uncaught exception in completion handler: " << e.what();
-                            } catch (...) {
-                                LOG(error) << "Unknown uncaught exception in completion handler.";
-                            }
-                        },
-                        alloc2);
+            if (fChangeStateOp.IsCompleted()) {
+                fChangeStateOp = ChangeStateOp(AsioBase<Executor, Allocator>::GetExecutor(),
+                                               AsioBase<Executor, Allocator>::GetAllocator(),
+                                               std::move(handler));
+                fChangeStateTarget = expectedState.at(transition);
+                ResetTransitionedCount(fChangeStateTarget);
+                cmd::Cmds cmds(cmd::make<cmd::ChangeState>(transition));
+                fDDSSession.SendCommand(cmds.Serialize());
+                if (timeout > std::chrono::milliseconds(0)) {
+                    fChangeStateOpTimer.expires_after(timeout);
+                    fChangeStateOpTimer.async_wait([&](std::error_code ec) {
+                        if (!ec) {
+                            std::lock_guard<std::mutex> lk2(fMtx);
+                            fChangeStateOp.Timeout(fStateData);
+                        }
+                    });
                 }
-            },
-            token);
+            } else {
+                // TODO refactor to hide boiler plate
+                auto ex2(asio::get_associated_executor(handler, AsioBase<Executor, Allocator>::GetExecutor()));
+                auto alloc2(asio::get_associated_allocator(handler, AsioBase<Executor, Allocator>::GetAllocator()));
+                auto state(GetCurrentStateUnsafe());
+
+                ex2.post([h = std::move(handler), s = std::move(state)]() mutable {
+                    try {
+                        h(MakeErrorCode(ErrorCode::OperationInProgress), s);
+                    } catch (const std::exception& e) {
+                        LOG(error) << "Uncaught exception in completion handler: " << e.what();
+                    } catch (...) {
+                        LOG(error) << "Unknown uncaught exception in completion handler.";
+                    }
+                },
+                alloc2);
+            }
+        },
+        token);
     }
 
     template<typename CompletionToken>
-    auto AsyncChangeState(TopologyTransition transition, CompletionToken&& token)
+    auto AsyncChangeState(const TopologyTransition transition, CompletionToken&& token)
     {
         return AsyncChangeState(transition, Duration(0), std::move(token));
     }
@@ -378,7 +404,7 @@ class BasicTopology : public AsioBase<Executor, Allocator>
     /// @param timeout Timeout in milliseconds, 0 means no timeout
     /// @tparam CompletionToken Asio completion token type
     /// @throws std::system_error
-    auto ChangeState(TopologyTransition transition, Duration timeout = Duration(0))
+    auto ChangeState(const TopologyTransition transition, Duration timeout = Duration(0))
         -> std::pair<std::error_code, TopologyState>
     {
         tools::SharedSemaphore blocker;
@@ -406,8 +432,80 @@ class BasicTopology : public AsioBase<Executor, Allocator>
 
     auto StateEqualsTo(DeviceState state) const -> bool { return sdk::StateEqualsTo(GetCurrentState(), state); }
 
+    using SetPropertiesCompletionSignature = void(std::error_code, TopologyProperties);
+
+    template<typename CompletionToken>
+    auto AsyncSetProperties(const Properties& properties, Duration timeout, CompletionToken&& token)
+    {
+        return asio::async_initiate<CompletionToken, SetPropertiesCompletionSignature>([&](auto handler) {
+            std::lock_guard<std::mutex> lk(fMtx);
+
+            if (fSetPropertiesOp.IsCompleted()) {
+                fSetPropertiesOp = SetPropertiesOp(AsioBase<Executor, Allocator>::GetExecutor(),
+                                                   AsioBase<Executor, Allocator>::GetAllocator(),
+                                                   std::move(handler));
+                fUpdatedProperties = {};
+                fUpdatedProperties.reserve(fStateData.size());
+
+                cmd::Cmds cmds;
+
+                for (const auto& p : properties) {
+                    cmds.Add<cmd::SetProperty>(p.first, p.second);
+                }
+                fDDSSession.SendCommand(cmds.Serialize());
+                if (timeout > std::chrono::milliseconds(0)) {
+                    fSetPropertiesOpTimer.expires_after(timeout);
+                    fSetPropertiesOpTimer.async_wait([&](std::error_code ec) {
+                        if (!ec) {
+                            std::lock_guard<std::mutex> lk2(fMtx);
+                            fSetPropertiesOp.Timeout(fUpdatedProperties);
+                        }
+                    });
+                }
+            } else {
+                // TODO refactor to hide boiler plate
+                auto ex2(asio::get_associated_executor(handler, AsioBase<Executor, Allocator>::GetExecutor()));
+                auto alloc2(asio::get_associated_allocator(handler, AsioBase<Executor, Allocator>::GetAllocator()));
+
+                ex2.post([h = std::move(handler), p = std::move(fUpdatedProperties)]() mutable {
+                    try {
+                        h(MakeErrorCode(ErrorCode::OperationInProgress), p);
+                    } catch (const std::exception& e) {
+                        LOG(error) << "Uncaught exception in completion handler: " << e.what();
+                    } catch (...) {
+                        LOG(error) << "Unknown uncaught exception in completion handler.";
+                    }
+                },
+                alloc2);
+            }
+        },
+        token);
+    }
+
+    template<typename CompletionToken>
+    auto AsyncSetProperties(const Properties& properties, CompletionToken&& token)
+    {
+        return AsyncSetProperties(properties, Duration(0), std::move(token));
+    }
+
+    auto SetProperties(const Properties& properties, Duration timeout = Duration(0))
+        -> std::pair<std::error_code, TopologyProperties>
+    {
+        tools::SharedSemaphore blocker;
+        std::error_code ec;
+        TopologyProperties props;
+        AsyncSetProperties(properties, timeout, [&, blocker](std::error_code _ec, TopologyProperties _properties) mutable {
+            ec = _ec;
+            props = _properties;
+            blocker.Signal();
+        });
+        blocker.Wait();
+        return {ec, props};
+    }
+
   private:
     using TransitionedCount = unsigned int;
+    using UpdatedPropertiesCount = unsigned int;
 
     DDSSession fDDSSession;
     DDSTopology fDDSTopo;
@@ -420,6 +518,11 @@ class BasicTopology : public AsioBase<Executor, Allocator>
     asio::steady_timer fChangeStateOpTimer;
     DeviceState fChangeStateTarget;
     TransitionedCount fTransitionedCount;
+
+    using SetPropertiesOp = AsioAsyncOp<Executor, Allocator, SetPropertiesCompletionSignature>;
+    SetPropertiesOp fSetPropertiesOp;
+    asio::steady_timer fSetPropertiesOpTimer;
+    TopologyProperties fUpdatedProperties;
 
     auto makeTopologyState() -> void
     {
@@ -472,6 +575,26 @@ class BasicTopology : public AsioBase<Executor, Allocator>
     auto GetCurrentStateUnsafe() const -> TopologyState
     {
         return fStateData;
+    }
+
+    auto UpdateProperties(const Properties&& properties) -> void
+    {
+        try {
+            std::lock_guard<std::mutex> lk(fMtx);
+            fUpdatedProperties.emplace_back({properties});
+            TryPropertiesCompletion();
+        } catch (const std::exception& e) {
+            LOG(error) << "Exception in UpdateProperties: " << e.what();
+        }
+    }
+
+    /// precodition: fMtx is locked.
+    auto TryPropertiesCompletion() -> void
+    {
+        if (!fSetPropertiesOp.IsCompleted() && fUpdatedProperties.size() == fStateData.size()) {
+            fSetPropertiesOpTimer.cancel();
+            fSetPropertiesOp.Complete(fUpdatedProperties);
+        }
     }
 };
 

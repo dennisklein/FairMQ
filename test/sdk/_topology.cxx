@@ -243,4 +243,46 @@ TEST_F(Topology, ChangeStateFullDeviceLifecycle2)
     }
 }
 
+TEST_F(Topology, ChangeStateWithSetProperty)
+{
+    using namespace fair::mq;
+    using fair::mq::sdk::TopologyTransition;
+
+    sdk::Topology topo(mDDSTopo, mDDSSession);
+    unsigned int numDevices = 0;
+
+    for (auto transition : {TopologyTransition::InitDevice,
+                            TopologyTransition::CompleteInit,
+                            TopologyTransition::Bind,
+                            TopologyTransition::Connect,
+                            TopologyTransition::InitTask,
+                            TopologyTransition::Run}) {
+        auto result = topo.ChangeState(transition);
+        ASSERT_EQ(result.first, std::error_code());
+        numDevices = result.second.size();
+    }
+
+    fair::mq::sdk::Properties props;
+    props.emplace_back("key1", "val1");
+    props.emplace_back("key2", "val2");
+
+    auto result = topo.SetProperties(props);
+    ASSERT_EQ(result.first, std::error_code());
+    auto topologyProperties = result.second;
+    ASSERT_EQ(numDevices, topologyProperties.size());
+
+    for (const auto& e : topologyProperties) {
+        ASSERT_EQ(e.size(), 2);
+        ASSERT_EQ(e.size(), props.size());
+        ASSERT_EQ(props.at(0).first, e.at(0).first);
+        ASSERT_EQ(props.at(0).second, e.at(0).second);
+    }
+
+    for (auto transition : {TopologyTransition::Stop,
+                            TopologyTransition::ResetTask,
+                            TopologyTransition::ResetDevice}) {
+        ASSERT_EQ(topo.ChangeState(transition).first, std::error_code());
+    }
+}
+
 }   // namespace

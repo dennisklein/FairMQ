@@ -37,7 +37,8 @@ enum class ErrorCode
     OperationInProgress = 10,
     OperationTimeout,
     OperationCanceled,
-    DeviceChangeStateFailed
+    DeviceChangeStateFailed,
+    DeviceSetPropertyFailed
 };
 
 std::error_code MakeErrorCode(ErrorCode);
