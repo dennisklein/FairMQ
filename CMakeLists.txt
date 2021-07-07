@@ -29,16 +29,10 @@ fairmq_build_option(BUILD_TESTING       "Build tests."
                                          DEFAULT OFF REQUIRES "BUILD_FAIRMQ")
 fairmq_build_option(BUILD_OFI_TRANSPORT "Build experimental OFI transport."
                                          DEFAULT OFF REQUIRES "BUILD_FAIRMQ")
-fairmq_build_option(BUILD_SDK_COMMANDS  "Build the FairMQ SDK commands."
-                                         DEFAULT OFF)
-fairmq_build_option(BUILD_DDS_PLUGIN    "Build DDS plugin."
-                                         DEFAULT OFF REQUIRES "BUILD_FAIRMQ;BUILD_SDK_COMMANDS")
 fairmq_build_option(BUILD_PMIX_PLUGIN   "Build PMIx plugin."
                                          DEFAULT OFF REQUIRES "BUILD_FAIRMQ;BUILD_SDK_COMMANDS")
 fairmq_build_option(BUILD_EXAMPLES      "Build FairMQ examples."
                                          DEFAULT ON  REQUIRES "BUILD_FAIRMQ")
-fairmq_build_option(BUILD_SDK           "Build the FairMQ controller SDK."
-                                         DEFAULT OFF REQUIRES "BUILD_DDS_PLUGIN;BUILD_SDK_COMMANDS")
 fairmq_build_option(BUILD_DOCS          "Build FairMQ documentation."
                                          DEFAULT OFF)
 fairmq_build_option(USE_EXTERNAL_GTEST  "Do not use bundled GTest. Not recommended."
@@ -55,7 +49,7 @@ include(FairMQDependencies)
 
 
 # Targets ######################################################################
-if(BUILD_FAIRMQ OR BUILD_SDK)
+if(BUILD_FAIRMQ)
   add_subdirectory(fairmq)
 endif()
 
@@ -86,9 +80,6 @@ endif()
 if(BUILD_TESTING)
   list(APPEND PROJECT_PACKAGE_COMPONENTS tests)
 endif()
-if(BUILD_DDS_PLUGIN)
-  list(APPEND PROJECT_PACKAGE_COMPONENTS dds_plugin)
-endif()
 if(BUILD_PMIX_PLUGIN)
   list(APPEND PROJECT_PACKAGE_COMPONENTS pmix_plugin)
 endif()
@@ -100,12 +91,6 @@ if(BUILD_EXAMPLES)
 endif()
 if(BUILD_DOCS)
   list(APPEND PROJECT_PACKAGE_COMPONENTS docs)
-endif()
-if(BUILD_SDK)
-  list(APPEND PROJECT_PACKAGE_COMPONENTS sdk)
-endif()
-if(BUILD_SDK_COMMANDS)
-  list(APPEND PROJECT_PACKAGE_COMPONENTS sdk_commands)
 endif()
 ################################################################################
 
@@ -120,11 +105,6 @@ if(BUILD_DOCS)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/doxygen/html
     DESTINATION ${PROJECT_INSTALL_DATADIR}/docs
   )
-endif()
-if(BUILD_SDK)
-  if(asio_BUNDLED)
-    install_bundled(asio)
-  endif()
 endif()
 
 include(FairMQPackage)

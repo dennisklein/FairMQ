@@ -6,7 +6,7 @@
 #                  copied verbatim in the file "LICENSE"                       #
 ################################################################################
 
-if(BUILD_FAIRMQ OR BUILD_SDK)
+if(BUILD_FAIRMQ)
   ###########
   # Version #
   ###########
@@ -411,20 +411,9 @@ if(BUILD_FAIRMQ)
   endforeach()
 endif()
 
-if(BUILD_SDK_COMMANDS)
-  add_subdirectory(sdk/commands)
-endif()
-
-if(BUILD_SDK)
-  add_subdirectory(sdk)
-endif()
-
 ####################
 # external plugins #
 ####################
-if(BUILD_DDS_PLUGIN)
-  add_subdirectory(plugins/DDS)
-endif()
 if(BUILD_PMIX_PLUGIN)
   add_subdirectory(plugins/PMIx)
 endif()
