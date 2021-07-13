@@ -189,6 +189,11 @@ class Manager
                 throw TransportError(tools::ToString("Failed to ", op, " shared memory segment (", "fmq_", fShmId, "_m_", fSegmentId, "): ", bie.what()));
             }
 
+            if (zeroSegment) {
+                LOG(debug) << "Zeroing the managed segment free memory...";
+                boost::apply_visitor(SegmentMemoryZeroer(), fSegments.at(fSegmentId));
+                LOG(debug) << "Successfully zeroed the managed segment free memory.";
+            }
             if (mlockSegment) {
                 LOG(debug) << "Locking the managed segment memory pages...";
                 if (mlock(boost::apply_visitor(SegmentAddress(), fSegments.at(fSegmentId)), boost::apply_visitor(SegmentSize(), fSegments.at(fSegmentId))) == -1) {
@@ -196,11 +201,6 @@ class Manager
                     throw TransportError(tools::ToString("Could not lock the managed segment memory: ", strerror(errno)));
                 }
                 LOG(debug) << "Successfully locked the managed segment memory pages.";
-            }
-            if (zeroSegment) {
-                LOG(debug) << "Zeroing the managed segment free memory...";
-                boost::apply_visitor(SegmentMemoryZeroer(), fSegments.at(fSegmentId));
-                LOG(debug) << "Successfully zeroed the managed segment free memory.";
             }
 
 #ifdef FAIRMQ_DEBUG_MODE
