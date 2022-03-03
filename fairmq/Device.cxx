@@ -290,7 +290,9 @@ void Device::BindWrapper()
 
     Bind();
 
-    ChangeState(Transition::Auto);
+    if (!NewStatePending()) {
+        ChangeState(Transition::Auto);
+    }
 }
 
 void Device::ConnectWrapper()
@@ -327,7 +329,9 @@ void Device::ConnectWrapper()
 
     Connect();
 
-    ChangeState(Transition::Auto);
+    if (!NewStatePending()) {
+        ChangeState(Transition::Auto);
+    }
 }
 
 void Device::AttachChannels(vector<Channel*>& chans)
@@ -427,7 +431,9 @@ void Device::InitTaskWrapper()
 {
     InitTask();
 
-    ChangeState(Transition::Auto);
+    if (!NewStatePending()) {
+        ChangeState(Transition::Auto);
+    }
 }
 
 void Device::RunWrapper()
@@ -772,7 +778,9 @@ void Device::ResetTaskWrapper()
 {
     ResetTask();
 
-    ChangeState(Transition::Auto);
+    if (!NewStatePending()) {
+        ChangeState(Transition::Auto);
+    }
 }
 
 void Device::ResetWrapper()
@@ -786,7 +794,9 @@ void Device::ResetWrapper()
     fChannels.clear();
     fTransports.clear();
     fTransportFactory.reset();
-    ChangeState(Transition::Auto);
+    if (!NewStatePending()) {
+        ChangeState(Transition::Auto);
+    }
 }
 
 Device::~Device()
