@@ -1,5 +1,5 @@
 /********************************************************************************
- *    Copyright (C) 2019 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH    *
+ * Copyright (C) 2019-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -68,7 +68,7 @@ array<string, 17> typeNames =
     }
 };
 
-array<fair::mq::State, 16> fbStateToMQState =
+array<fair::mq::State, 17> fbStateToMQState =
 {
     {
         fair::mq::State::Undefined,
@@ -86,11 +86,12 @@ array<fair::mq::State, 16> fbStateToMQState =
         fair::mq::State::Running,
         fair::mq::State::ResettingTask,
         fair::mq::State::ResettingDevice,
-        fair::mq::State::Exiting
+        fair::mq::State::Exiting,
+        fair::mq::State::Stopping
     }
 };
 
-array<sdk::cmd::FBState, 16> mqStateToFBState =
+array<sdk::cmd::FBState, 17> mqStateToFBState =
 {
     {
         sdk::cmd::FBState_Undefined,
@@ -108,7 +109,8 @@ array<sdk::cmd::FBState, 16> mqStateToFBState =
         sdk::cmd::FBState_Running,
         sdk::cmd::FBState_ResettingTask,
         sdk::cmd::FBState_ResettingDevice,
-        sdk::cmd::FBState_Exiting
+        sdk::cmd::FBState_Exiting,
+        sdk::cmd::FBState_Stopping
     }
 };
 

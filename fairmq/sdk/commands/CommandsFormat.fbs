@@ -21,7 +21,8 @@ enum FBState:byte {
     Running,
     ResettingTask,
     ResettingDevice,
-    Exiting
+    Exiting,
+    Stopping
 }
 
 enum FBTransition:byte {

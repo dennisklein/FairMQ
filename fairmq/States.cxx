@@ -1,5 +1,5 @@
 /********************************************************************************
- *    Copyright (C) 2019 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH    *
+ * Copyright (C) 2019-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -16,7 +16,7 @@ using namespace std;
 namespace fair::mq
 {
 
-const array<string, 16> stateNames =
+const array<string, 17> stateNames =
 {
     {
         "UNDEFINED",
@@ -34,7 +34,8 @@ const array<string, 16> stateNames =
         "RUNNING",
         "RESETTING TASK",
         "RESETTING DEVICE",
-        "EXITING"
+        "EXITING",
+        "STOPPING"
     }
 };
 
@@ -55,7 +56,8 @@ const unordered_map<string, State> states =
     { "RUNNING",             State::Running },
     { "RESETTING TASK",      State::ResettingTask },
     { "RESETTING DEVICE",    State::ResettingDevice },
-    { "EXITING",             State::Exiting }
+    { "EXITING",             State::Exiting },
+    { "STOPPING",            State::Stopping }
 };
 
 const array<string, 12> transitionNames =

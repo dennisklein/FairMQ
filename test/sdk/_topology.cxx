@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (C) 2019-2021 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
+ * Copyright (C) 2019-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -545,6 +545,7 @@ TEST(Topology2, AggregatedTopologyStateComparison)
     ASSERT_TRUE(DeviceState::InitializingTask == AggregatedTopologyState::InitializingTask);
     ASSERT_TRUE(DeviceState::Ready == AggregatedTopologyState::Ready);
     ASSERT_TRUE(DeviceState::Running == AggregatedTopologyState::Running);
+    ASSERT_TRUE(DeviceState::Stopping == AggregatedTopologyState::Stopping);
     ASSERT_TRUE(DeviceState::ResettingTask == AggregatedTopologyState::ResettingTask);
     ASSERT_TRUE(DeviceState::ResettingDevice == AggregatedTopologyState::ResettingDevice);
     ASSERT_TRUE(DeviceState::Exiting == AggregatedTopologyState::Exiting);
@@ -562,6 +563,7 @@ TEST(Topology2, AggregatedTopologyStateComparison)
     ASSERT_TRUE(GetAggregatedTopologyState("INITIALIZING TASK") == AggregatedTopologyState::InitializingTask);
     ASSERT_TRUE(GetAggregatedTopologyState("READY") == AggregatedTopologyState::Ready);
     ASSERT_TRUE(GetAggregatedTopologyState("RUNNING") == AggregatedTopologyState::Running);
+    ASSERT_TRUE(GetAggregatedTopologyState("STOPPING") == AggregatedTopologyState::Stopping);
     ASSERT_TRUE(GetAggregatedTopologyState("RESETTING TASK") == AggregatedTopologyState::ResettingTask);
     ASSERT_TRUE(GetAggregatedTopologyState("RESETTING DEVICE") == AggregatedTopologyState::ResettingDevice);
     ASSERT_TRUE(GetAggregatedTopologyState("EXITING") == AggregatedTopologyState::Exiting);
@@ -580,6 +582,7 @@ TEST(Topology2, AggregatedTopologyStateComparison)
     ASSERT_TRUE("INITIALIZING TASK" == GetAggregatedTopologyStateName(AggregatedTopologyState::InitializingTask));
     ASSERT_TRUE("READY" == GetAggregatedTopologyStateName(AggregatedTopologyState::Ready));
     ASSERT_TRUE("RUNNING" == GetAggregatedTopologyStateName(AggregatedTopologyState::Running));
+    ASSERT_TRUE("STOPPING" == GetAggregatedTopologyStateName(AggregatedTopologyState::Stopping));
     ASSERT_TRUE("RESETTING TASK" == GetAggregatedTopologyStateName(AggregatedTopologyState::ResettingTask));
     ASSERT_TRUE("RESETTING DEVICE" == GetAggregatedTopologyStateName(AggregatedTopologyState::ResettingDevice));
     ASSERT_TRUE("EXITING" == GetAggregatedTopologyStateName(AggregatedTopologyState::Exiting));

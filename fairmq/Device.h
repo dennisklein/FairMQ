@@ -1,5 +1,5 @@
 /********************************************************************************
- *   Copyright (C) 2021 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH     *
+ * Copyright (C) 2021-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -468,6 +468,9 @@ class Device
     /// Called in the RUNNING state once after executing the Run()/ConditionalRun() method
     virtual void PostRun() {}
 
+    /// Stops the device (to be overloaded in child classes)
+    virtual void Stop() {}
+
     /// Resets the user task (to be overloaded in child classes)
     virtual void ResetTask() {}
 
@@ -583,6 +586,8 @@ class Device
     void InitTaskWrapper();
     /// Handles the Run() method
     void RunWrapper();
+    /// Handles the Stop() method
+    void StopWrapper();
     /// Handles the ResetTask() method
     void ResetTaskWrapper();
     /// Handles the Reset() method

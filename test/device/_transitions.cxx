@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (C) 2014-2018 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
+ * Copyright (C) 2014-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -63,9 +63,9 @@ TEST(Transitions, TransitionTo)
     transitionTo({State::Exiting}, 2);
     transitionTo({State::InitializingDevice, State::Initialized, State::Exiting}, 6);
     transitionTo({State::Initialized, State::Exiting}, 6);
-    transitionTo({State::DeviceReady, State::Bound, State::Running, State::Exiting}, 24);
+    transitionTo({State::DeviceReady, State::Bound, State::Running, State::Exiting}, 25);
     transitionTo({State::Ready, State::Exiting}, 14);
-    transitionTo({State::Running, State::Exiting}, 16);
+    transitionTo({State::Running, State::Exiting}, 17);
 }
 
 TEST(Transitions, ConcurrentTransitionTos)

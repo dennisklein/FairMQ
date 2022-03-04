@@ -1,5 +1,5 @@
 /********************************************************************************
- *    Copyright (C) 2014 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH    *
+ * Copyright (C) 2014-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -54,6 +54,7 @@ struct DEVICE_READY_S        : public state<> { static string Name() { return "D
 struct INITIALIZING_TASK_S   : public state<> { static string Name() { return "INITIALIZING_TASK"; }   static State Type() { return State::InitializingTask; } };
 struct READY_S               : public state<> { static string Name() { return "READY"; }               static State Type() { return State::Ready; } };
 struct RUNNING_S             : public state<> { static string Name() { return "RUNNING"; }             static State Type() { return State::Running; } };
+struct STOPPING_S            : public state<> { static string Name() { return "STOPPING"; }            static State Type() { return State::Stopping; } };
 struct RESETTING_TASK_S      : public state<> { static string Name() { return "RESETTING_TASK"; }      static State Type() { return State::ResettingTask; } };
 struct RESETTING_DEVICE_S    : public state<> { static string Name() { return "RESETTING_DEVICE"; }    static State Type() { return State::ResettingDevice; } };
 struct EXITING_S             : public state<> { static string Name() { return "EXITING"; }             static State Type() { return State::Exiting; } };
@@ -136,7 +137,8 @@ struct Machine_ : public state_machine_def<Machine_>
         Row<READY_S,               RUN_E,           RUNNING_S,             DefaultFct, none>,
         Row<READY_S,               RESET_TASK_E,    RESETTING_TASK_S,      DefaultFct, none>,
 
-        Row<RUNNING_S,             STOP_E,          READY_S,               DefaultFct, none>,
+        Row<RUNNING_S,             STOP_E,          STOPPING_S,            DefaultFct, none>,
+        Row<STOPPING_S,            AUTO_E,          READY_S,               DefaultFct, none>,
 
         Row<RESETTING_TASK_S,      AUTO_E,          DEVICE_READY_S,        DefaultFct, none>,
         Row<RESETTING_DEVICE_S,    AUTO_E,          IDLE_S,                DefaultFct, none>,

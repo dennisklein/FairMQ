@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (C) 2017-2018 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
+ * Copyright (C) 2017-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -306,6 +306,9 @@ void Control::PrintStateMachineColor()
        << "   ┌─────── ▼ ────────────────────[\033[01;32mt\033[0m]───────┐   \n"
        << "   │                 \033[01;36mREADY\033[0m                  │   \n"
        << "   └───────[\033[01;32mr\033[0m]──────────────────── ▲ ───────┘   \n"
+       << "            │            ╔═════════╩══════════╗                      \n"
+       << "            │            ║      \033[01;33mSTOPPING\033[0m      ║                      \n"
+       << "            │            ╚════════ ▲ ═════════╝                      \n"
        << "    ╔══════ ▼ ════════════════════[\033[01;32ms\033[0m]══════╗    \n"
        << "    ║               \033[01;33mRUNNING\033[0m                ║    \n"
        << "    ╚══════════════════════════════════════╝    \n"
@@ -344,6 +347,9 @@ void Control::PrintStateMachine()
        << "   ┌─────── ▼ ────────────────────[t]───────┐                        \n"
        << "   │                 READY                  │                        \n"
        << "   └───────[r]──────────────────── ▲ ───────┘                        \n"
+       << "            │            ╔═════════╩══════════╗                      \n"
+       << "            │            ║      STOPPING      ║                      \n"
+       << "            │            ╚════════ ▲ ═════════╝                      \n"
        << "    ╔══════ ▼ ════════════════════[s]══════╗                         \n"
        << "    ║               RUNNING                ║                         \n"
        << "    ╚══════════════════════════════════════╝                         \n"
@@ -456,6 +462,7 @@ auto Control::RunShutdownSequence() -> void
             case DeviceState::DeviceReady:
                 ChangeDeviceState(DeviceStateTransition::ResetDevice);
                 break;
+            case DeviceState::Stopping:
             case DeviceState::Ready:
                 ChangeDeviceState(DeviceStateTransition::ResetTask);
                 break;

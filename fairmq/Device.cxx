@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (C) 2012-2021 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
+ * Copyright (C) 2012-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -119,6 +119,9 @@ Device::Device(ProgOptions* config, tools::Version version)
                 break;
             case State::Running:
                 RunWrapper();
+                break;
+            case State::Stopping:
+                StopWrapper();
                 break;
             case State::ResettingTask:
                 ResetTaskWrapper();
@@ -764,6 +767,13 @@ void Device::UnblockTransports()
     for (auto& transport : fTransports) {
         transport.second->Interrupt();
     }
+}
+
+void Device::StopWrapper()
+{
+    Stop();
+
+    ChangeState(Transition::Auto);
 }
 
 void Device::ResetTaskWrapper()

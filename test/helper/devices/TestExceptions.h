@@ -1,5 +1,5 @@
 /********************************************************************************
- *   Copyright (C) 2018 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH     *
+ * Copyright (C) 2018-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -72,6 +72,14 @@ class Exceptions : public FairMQDevice
     auto PostRun() -> void override
     {
         std::string state("PostRun");
+        if (std::string::npos != GetId().find("_" + state + "_")) {
+            throw std::runtime_error("exception in " + state + "()");
+        }
+    }
+
+    auto Stop() -> void override
+    {
+        std::string state("Stop");
         if (std::string::npos != GetId().find("_" + state + "_")) {
             throw std::runtime_error("exception in " + state + "()");
         }

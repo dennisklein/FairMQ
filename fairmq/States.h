@@ -1,5 +1,5 @@
 /********************************************************************************
- *    Copyright (C) 2019 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH    *
+ * Copyright (C) 2019-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -33,7 +33,8 @@ enum class State : int
     Running,
     ResettingTask,
     ResettingDevice,
-    Exiting
+    Exiting,
+    Stopping
 };
 
 enum class Transition : int

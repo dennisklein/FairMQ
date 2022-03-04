@@ -85,6 +85,7 @@ enum class AggregatedTopologyState : int
     InitializingTask = static_cast<int>(fair::mq::State::InitializingTask),
     Ready = static_cast<int>(fair::mq::State::Ready),
     Running = static_cast<int>(fair::mq::State::Running),
+    Stopping = static_cast<int>(fair::mq::State::Stopping),
     ResettingTask = static_cast<int>(fair::mq::State::ResettingTask),
     ResettingDevice = static_cast<int>(fair::mq::State::ResettingDevice),
     Exiting = static_cast<int>(fair::mq::State::Exiting),

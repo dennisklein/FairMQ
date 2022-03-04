@@ -1,5 +1,5 @@
 /********************************************************************************
- *   Copyright (C) 2018 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH     *
+ * Copyright (C) 2018-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -77,6 +77,15 @@ class ErrorState : public FairMQDevice
     void PostRun() override
     {
         std::string state("PostRun");
+        if (std::string::npos != GetId().find("_" + state + "_")) {
+            LOG(info) << "going to change to Error state from " << state << "()";
+            ChangeState(fair::mq::Transition::ErrorFound);
+        }
+    }
+
+    void Stop() override
+    {
+        std::string state("Stop");
         if (std::string::npos != GetId().find("_" + state + "_")) {
             LOG(info) << "going to change to Error state from " << state << "()";
             ChangeState(fair::mq::Transition::ErrorFound);

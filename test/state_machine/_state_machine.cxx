@@ -1,5 +1,5 @@
 /********************************************************************************
- *    Copyright (C) 2017 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH    *
+ * Copyright (C) 2017-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -95,6 +95,7 @@ TEST(StateMachine, StateConversions)
     EXPECT_NO_THROW(fsm.ToState("INITIALIZING TASK"));
     EXPECT_NO_THROW(fsm.ToState("READY"));
     EXPECT_NO_THROW(fsm.ToState("RUNNING"));
+    EXPECT_NO_THROW(fsm.ToState("STOPPING"));
     EXPECT_NO_THROW(fsm.ToState("RESETTING TASK"));
     EXPECT_NO_THROW(fsm.ToState("RESETTING DEVICE"));
     EXPECT_NO_THROW(fsm.ToState("EXITING"));
@@ -106,6 +107,7 @@ TEST(StateMachine, StateConversions)
     EXPECT_NO_THROW(fsm.ToStr(S::InitializingTask));
     EXPECT_NO_THROW(fsm.ToStr(S::Ready));
     EXPECT_NO_THROW(fsm.ToStr(S::Running));
+    EXPECT_NO_THROW(fsm.ToStr(S::Stopping));
     EXPECT_NO_THROW(fsm.ToStr(S::ResettingTask));
     EXPECT_NO_THROW(fsm.ToStr(S::ResettingDevice));
     EXPECT_NO_THROW(fsm.ToStr(S::Exiting));

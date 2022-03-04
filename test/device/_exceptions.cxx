@@ -1,5 +1,5 @@
 /********************************************************************************
- *    Copyright (C) 2018 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH    *
+ * Copyright (C) 2018-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -74,6 +74,10 @@ TEST(Exceptions, static_InPostRun)
 {
     EXPECT_EXIT(RunExceptionIn("PostRun", "static"), ::testing::ExitedWithCode(1), "");
 }
+TEST(Exceptions, static_InStop)
+{
+    EXPECT_EXIT(RunExceptionIn("Stop", "static"), ::testing::ExitedWithCode(1), "");
+}
 TEST(Exceptions, static_InResetTask)
 {
     EXPECT_EXIT(RunExceptionIn("ResetTask", "static"), ::testing::ExitedWithCode(1), "");
@@ -109,6 +113,10 @@ TEST(Exceptions, interactive_InRun)
 TEST(Exceptions, interactive_InPostRun)
 {
     EXPECT_EXIT(RunExceptionIn("PostRun", "interactive"), ::testing::ExitedWithCode(1), "");
+}
+TEST(Exceptions, interactive_InStop)
+{
+    EXPECT_EXIT(RunExceptionIn("Stop", "interactive"), ::testing::ExitedWithCode(1), "");
 }
 TEST(Exceptions, interactive_InResetTask)
 {
