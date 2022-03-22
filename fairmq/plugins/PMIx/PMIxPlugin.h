@@ -1,5 +1,5 @@
 /********************************************************************************
- *    Copyright (C) 2019 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH    *
+ * Copyright (C) 2019-2022 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -44,7 +44,6 @@ class PMIxPlugin : public Plugin
     pid_t fPid;
     std::string fPMIxClient;
     std::string fDeviceId;
-    pmix::Commands fCommands;
 
     std::set<uint32_t> fStateChangeSubscribers;
     uint32_t fLastExternalController;
@@ -61,7 +60,6 @@ class PMIxPlugin : public Plugin
     auto Fence(const std::string& label) -> void;
     auto Lookup() -> void;
 
-    auto SubscribeForCommands() -> void;
     auto WaitForExitingAck() -> void;
 };
 
