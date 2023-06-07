@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (C) 2014-2021 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
+ * Copyright (C) 2014-2023 GSI Helmholtzzentrum fuer Schwerionenforschung GmbH  *
  *                                                                              *
  *              This software is distributed under the terms of the             *
  *              GNU Lesser General Public Licence (LGPL) version 3,             *
@@ -11,12 +11,13 @@
 #include "Common.h"
 #include "Manager.h"
 #include "Message.h"
-#include <fairmq/Error.h>
+#include <fairmq/Error.h>              // for assertm
 #include <fairmq/Message.h>
 #include <fairmq/Socket.h>
+#include <fairmq/tools/Compiler.h>     // for __FAIRMQ_ALWAYS_INLINE
 #include <fairmq/tools/Strings.h>
-#include <fairmq/zeromq/Common.h>
-#include <fairmq/zeromq/ZMsg.h>
+#include <fairmq/zeromq/Common.h>      // for zmq::HandleErrors, zmq::ShouldRetry
+#include <fairmq/zeromq/ZMsg.h>        // for zmq::ZMsg
 
 #include <fairlogger/Logger.h>
 
@@ -109,6 +110,15 @@ class Socket final : public fair::mq::Socket
         return zmq::Connect(fSocket, address, fId);
     }
 
+  private:
+    __FAIRMQ_ALWAYS_INLINE auto MakeMetaMsg(shmem::Message const& shmMsg) noexcept
+    {
+        zmq::ZMsg metaMsg(sizeof(MetaHeader));
+        std::memcpy(metaMsg.Data(), &(shmMsg.fMeta), sizeof(MetaHeader));
+        return metaMsg;
+    }
+
+  public:
     int64_t Send(mq::MessagePtr& msg, int timeout = -1) override
     {
         auto msgPtr = msg.get();
@@ -124,8 +134,10 @@ class Socket final : public fair::mq::Socket
         }
         int elapsed = 0;
 
+        auto metaMsg = MakeMetaMsg(*shmMsg);
+
         while (true) {
-            int nbytes = zmq_send(fSocket, &(shmMsg->fMeta), sizeof(MetaHeader), flags);
+            int nbytes = metaMsg.Send(fSocket, flags);
             if (nbytes > 0) {
                 shmMsg->fQueued = true;
                 ++fMessagesTx;
@@ -186,6 +198,26 @@ class Socket final : public fair::mq::Socket
         }
     }
 
+  private:
+    // TODO In C++20 we should use a std::ranges::sized_range<shmem::Message const&>
+    __FAIRMQ_ALWAYS_INLINE auto MakeMetaMsg(std::vector<mq::MessagePtr> const & mqMsgs) noexcept
+    {
+        // put it into zmq message
+        const unsigned int vecSize = mqMsgs.size();
+        zmq::ZMsg zmqMsg(vecSize * sizeof(MetaHeader));
+
+        // prepare the message with shm metas
+        MetaHeader* metas = static_cast<MetaHeader*>(zmqMsg.Data());
+
+        for (auto& msg : mqMsgs) {
+            auto shmMsg = static_cast<shmem::Message*>(msg.get());   // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+            std::memcpy(metas++, &(shmMsg->fMeta), sizeof(MetaHeader));   // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        }
+
+        return zmqMsg;
+    }
+
+  public:
     int64_t Send(std::vector<MessagePtr>& msgVec, int timeout = -1) override
     {
         int flags = 0;
@@ -194,28 +226,21 @@ class Socket final : public fair::mq::Socket
         }
         int elapsed = 0;
 
-        // put it into zmq message
-        const unsigned int vecSize = msgVec.size();
-        zmq::ZMsg zmqMsg(vecSize * sizeof(MetaHeader));
-
-        // prepare the message with shm metas
-        MetaHeader* metas = static_cast<MetaHeader*>(zmqMsg.Data());
-
-        for (auto& msg : msgVec) {
+        for (auto const& msg : msgVec) {
             auto msgPtr = msg.get();
             if (!msgPtr) {
                 return static_cast<int>(TransferCode::error);
             }
             assertm(dynamic_cast<shmem::Message*>(msgPtr), "given mq::Message is a shmem::Message");   // NOLINT
-            auto shmMsg = static_cast<shmem::Message*>(msgPtr);   // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
-            std::memcpy(metas++, &(shmMsg->fMeta), sizeof(MetaHeader));
         }
+
+        auto metaMsg = MakeMetaMsg(msgVec);
 
         while (true) {
             int64_t totalSize = 0;
-            int nbytes = zmqMsg.Send(fSocket, flags);
+            int nbytes = metaMsg.Send(fSocket, flags);
             if (nbytes > 0) {
-                assert(static_cast<unsigned int>(nbytes) == (vecSize * sizeof(MetaHeader))); // all or nothing
+                assert(static_cast<unsigned int>(nbytes) >= (msgVec.size() * sizeof(MetaHeader))); // all or nothing
 
                 for (auto& msg : msgVec) {
                     Message* shmMsg = static_cast<Message*>(msg.get());
