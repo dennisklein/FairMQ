@@ -26,12 +26,17 @@ class Req : public Device
 
     auto Run() -> void override
     {
-        auto request = NewMessage();
+        auto request = NewSimpleMessageFor("data", 0, "request");
         Send(request, "data");
 
         auto reply = NewMessage();
         if (Receive(reply, "data") >= 0) {
             LOG(info) << "received reply";
+            auto content = std::string{static_cast<char*>(reply->GetData()), reply->GetSize()};
+            LOG(info) << "Transferred reply of size: " << reply->GetSize() << ", content: " << content;
+            if (content != "reply") {
+                ChangeState(Transition::ErrorFound);
+            }
         }
     };
 };
