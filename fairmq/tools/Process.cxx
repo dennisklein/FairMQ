@@ -11,7 +11,11 @@
 
 #include <boost/version.hpp>
 #include <boost/asio.hpp>
+#if BOOST_VERSION >= 108800
+#include <boost/process/v1.hpp>
+#else
 #include <boost/process.hpp>
+#endif
 #include <chrono>
 #include <csignal>   // kill, signals
 #include <iostream>

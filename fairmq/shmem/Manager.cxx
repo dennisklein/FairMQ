@@ -12,7 +12,11 @@
 // interferes with the <asio/buffer.hpp> header. So, let's factor
 // the whole dependency to Boost.Process out of the header.
 #include <boost/version.hpp>
+#if BOOST_VERSION >= 108800
+#include <boost/process/v1.hpp>
+#else
 #include <boost/process.hpp>
+#endif
 #include <fairlogger/Logger.h>
 
 namespace fair::mq::shmem {
