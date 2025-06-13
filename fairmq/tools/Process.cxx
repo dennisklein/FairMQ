@@ -22,6 +22,7 @@
 
 using namespace std;
 // Boost 1.88+ compatibility: boost::process v2 is now default, v1 APIs moved to v1 namespace
+// See: https://github.com/boostorg/process/issues/480
 #if BOOST_VERSION >= 108800
 namespace bp = boost::process::v1;
 #else

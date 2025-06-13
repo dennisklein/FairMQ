@@ -16,13 +16,16 @@
 #include <fairlogger/Logger.h>
 
 // Boost 1.88+ compatibility: boost::process v2 is now default, v1 APIs moved to v1 namespace
+// See: https://github.com/boostorg/process/issues/480
 #if BOOST_VERSION >= 108800
 namespace boost {
+// Provide compatibility aliases for boost::process v1 API
 namespace this_process = process::v1::this_process;
 namespace process_v1 = process::v1;
 }
 #else
 namespace boost {
+// For older Boost versions, process_v1 points to the default process namespace
 namespace process_v1 = process;
 }
 #endif
