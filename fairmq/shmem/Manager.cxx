@@ -13,9 +13,9 @@
 // the whole dependency to Boost.Process out of the header.
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 108800
-#include <boost/process/v1/this_process.hpp>
-#include <boost/process/v1/search_path.hpp>
-#include <boost/process/v1/spawn.hpp>
+#include <boost/process/environment.hpp>
+#include <boost/process/search_path.hpp>
+#include <boost/process/spawn.hpp>
 #else
 #include <boost/process.hpp>
 #endif

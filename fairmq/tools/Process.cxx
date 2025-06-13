@@ -12,9 +12,9 @@
 #include <boost/version.hpp>
 #include <boost/asio.hpp>
 #if BOOST_VERSION >= 108800
-#include <boost/process/v1/child.hpp>
-#include <boost/process/v1/async_pipe.hpp>
-#include <boost/process/v1/io.hpp>
+#include <boost/process/child.hpp>
+#include <boost/process/async_pipe.hpp>
+#include <boost/process/io.hpp>
 #else
 #include <boost/process.hpp>
 #endif
