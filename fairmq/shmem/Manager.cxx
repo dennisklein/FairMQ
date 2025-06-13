@@ -11,8 +11,21 @@
 // Needed to compile-firewall the <boost/process/async.hpp> header because it
 // interferes with the <asio/buffer.hpp> header. So, let's factor
 // the whole dependency to Boost.Process out of the header.
+#include <boost/version.hpp>
 #include <boost/process.hpp>
 #include <fairlogger/Logger.h>
+
+// Boost 1.88+ compatibility: boost::process v2 is now default, v1 APIs moved to v1 namespace
+#if BOOST_VERSION >= 108800
+namespace boost {
+namespace this_process = process::v1::this_process;
+namespace process_v1 = process::v1;
+}
+#else
+namespace boost {
+namespace process_v1 = process;
+}
+#endif
 
 namespace fair::mq::shmem {
 
@@ -28,7 +41,7 @@ bool Manager::SpawnShmMonitor(const std::string& id)
         path.emplace(path.begin(), env.at(fairmq_path_key).to_string());
     }
 
-    auto exe(boost::process::search_path(shmmonitor_exe_name, path));
+    auto exe(boost::process_v1::search_path(shmmonitor_exe_name, path));
     if (exe.empty()) {
         LOG(warn) << "could not find " << shmmonitor_exe_name << " in \"$" << fairmq_path_key
                   << ":$PATH\"";
@@ -39,7 +52,7 @@ bool Manager::SpawnShmMonitor(const std::string& id)
     bool verbose(env.count(shmmonitor_verbose_key)
                  && env.at(shmmonitor_verbose_key).to_string() == "true");
 
-    boost::process::spawn(
+    boost::process_v1::spawn(
         exe, "-x", "-m", "--shmid", id, "-d", "-t", "2000", (verbose ? "--verbose" : ""), env);
 
     return true;
