@@ -9,8 +9,15 @@
 #include <fairmq/tools/Process.h>
 #include <fairmq/tools/Strings.h>
 
+#include <boost/version.hpp>
 #include <boost/asio.hpp>
+#if BOOST_VERSION >= 108800
+#include <boost/process/child.hpp>
+#include <boost/process/async_pipe.hpp>
+#include <boost/process/io.hpp>
+#else
 #include <boost/process.hpp>
+#endif
 #include <chrono>
 #include <csignal>   // kill, signals
 #include <iostream>
@@ -20,7 +27,13 @@
 #include <utility>
 
 using namespace std;
+// Boost 1.88+ compatibility: boost::process v2 is now default, v1 APIs moved to v1 namespace
+// See: https://github.com/boostorg/process/issues/480
+#if BOOST_VERSION >= 108800
+namespace bp = boost::process::v1;
+#else
 namespace bp = boost::process;
+#endif
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
